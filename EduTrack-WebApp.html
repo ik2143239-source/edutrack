@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduTrack — School Management System</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1f3d;--navy2:#1a2e52;
+  --blue:#2563eb;--blue2:#3b82f6;--blue3:#60a5fa;
+  --green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;--teal:#0891b2;--pink:#db2777;
+  --bg:#f0f4f8;--surface:#fff;--border:#e2e8f0;
+  --text:#1e293b;--text2:#64748b;--text3:#94a3b8;
+  --sidebar:224px;
+}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo i{font-size:24px;color:var(--blue3)}
+.logo-text{font-size:17px;font-weight:700;color:#fff}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase}
+.role-switch{margin:12px 12px 4px;display:flex;background:rgba(255,255,255,.07);border-radius:8px;padding:3px;gap:2px;flex-wrap:wrap}
+.role-btn{flex:1;border:none;background:transparent;color:rgba(255,255,255,.5);font-size:10px;padding:5px 4px;cursor:pointer;border-radius:6px;transition:.15s;font-weight:500;min-width:40px}
+.role-btn.active{background:rgba(255,255,255,.15);color:#fff}
+.nav-section{padding:8px 0 2px;font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:1.5px;text-transform:uppercase;padding-left:16px;margin-top:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:rgba(255,255,255,.55);font-size:13px;cursor:pointer;border-left:3px solid transparent;transition:.15s;user-select:none}
+.nav-item:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06)}
+.nav-item.active{color:#fff;background:rgba(255,255,255,.1);border-left-color:var(--blue3)}
+.nav-item i{font-size:17px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:99px;font-size:9px;padding:1px 6px;font-weight:700}
+.sidebar-user{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;margin-top:auto}
+.ava{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;background:var(--blue)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);height:54px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-size:17px;font-weight:700;color:var(--text)}
+.topbar-r{display:flex;align-items:center;gap:6px}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:.15s;position:relative}
+.icon-btn:hover{background:var(--bg)}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--surface)}
+.content{flex:1;overflow-y:auto;padding:22px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-header{padding:20px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-title{font-size:16px;font-weight:700}
+.modal-body{padding:20px 22px}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* TOAST */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--text);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:slideIn .2s ease;max-width:320px}
+.toast.success{background:#166534;border:1px solid #4ade80}
+.toast.error{background:#991b1b;border:1px solid #f87171}
+.toast.info{background:#1e40af;border:1px solid #93c5fd}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.stat-icon{font-size:20px;margin-bottom:8px}
+.stat-label{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-bottom:4px}
+.stat-val{font-size:26px;font-weight:800;color:var(--text);line-height:1}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px}
+.card:last-child{margin-bottom:0}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:14px;font-weight:700;color:var(--text)}
+
+/* BUTTONS */
+.btn{border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;padding:7px 14px;color:var(--text);display:inline-flex;align-items:center;gap:6px;transition:.15s;font-weight:500}
+.btn:hover{background:var(--bg)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#1d4ed8}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-sm{font-size:12px;padding:5px 10px}
+.btn-xs{font-size:11px;padding:3px 8px;border-radius:6px}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:6px}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600;white-space:nowrap}
+.pill-green{background:#dcfce7;color:#166534}.pill-red{background:#fee2e2;color:#991b1b}
+.pill-amber{background:#fef3c7;color:#92400e}.pill-blue{background:#dbeafe;color:#1e40af}
+.pill-purple{background:#ede9fe;color:#5b21b6}.pill-teal{background:#ccfbf1;color:#065f46}
+.pill-gray{background:#f1f5f9;color:#475569}.pill-pink{background:#fce7f3;color:#9d174d}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:700;color:var(--text2);padding:10px 12px;border-bottom:2px solid var(--border);background:#f8fafc;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text);font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+
+/* FORMS */
+.input,.select,.textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;background:var(--surface);color:var(--text);transition:.15s;font-family:inherit}
+.input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.form-label{font-size:12px;font-weight:600;color:var(--text2)}
+.form-help{font-size:11px;color:var(--text3)}
+
+/* MISC */
+.bar-wrap{background:#e2e8f0;border-radius:99px;height:7px;overflow:hidden}
+.bar{height:100%;border-radius:99px}
+.grade-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+.grade-row:last-child{border-bottom:none}
+.hw-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.hw-item:last-child{border-bottom:none}
+.hw-check{width:20px;height:20px;border:2px solid var(--border);border-radius:5px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+.hw-check.done{background:var(--green);border-color:var(--green);color:#fff}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+.notice{border-radius:8px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.notice.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.notice.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.notice.success{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty-state i{font-size:40px;opacity:.25;display:block;margin-bottom:10px}
+.search-bar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.search-bar .input{max-width:260px}
+
+/* BADGE AVATAR */
+.big-ava{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ATTENDANCE CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}
+.cal-day-name{font-size:10px;font-weight:700;color:var(--text2);padding:4px 0;text-transform:uppercase}
+.cal-day{border-radius:7px;padding:7px 0;font-size:12px;font-weight:600}
+.cal-p{background:#dcfce7;color:#166534}.cal-a{background:#fee2e2;color:#991b1b}
+.cal-l{background:#fef3c7;color:#92400e}.cal-empty{background:transparent}
+
+/* SCHEDULE */
+.sch-grid{display:grid;grid-template-columns:58px repeat(5,1fr);gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.sch-hdr{background:var(--navy);color:#fff;padding:10px 6px;font-size:11px;font-weight:700;text-align:center}
+.sch-time{background:#f8fafc;padding:8px 4px;font-size:10px;color:var(--text2);text-align:center;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-weight:600}
+.sch-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px;min-height:52px;background:var(--surface)}
+.sch-cls{border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600;height:100%;display:flex;flex-direction:column;justify-content:center}
+
+/* MSG */
+.msg-layout{display:grid;grid-template-columns:240px 1fr;height:460px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.msg-list{border-right:1px solid var(--border);overflow-y:auto;background:var(--surface)}
+.msg-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:10px;transition:.15s}
+.msg-item:hover,.msg-item.active{background:#f0f4ff}
+.bubble-wrap{display:flex;gap:8px;align-items:flex-end}
+.bubble-wrap.me{flex-direction:row-reverse}
+.bubble{max-width:65%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5}
+.bubble-in{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
+.bubble-me{background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+</style>
+</head>
+<body>
+<div id="toast-container" class="toast-container"></div>
+<div id="modal-root"></div>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <i class="ti ti-school"></i>
+      <div><div class="logo-text">EduTrack</div><div class="logo-sub">School Management</div></div>
+    </div>
+    <div class="role-switch">
+      <button class="role-btn active" onclick="setRole('student')">Student</button>
+      <button class="role-btn" onclick="setRole('teacher')">Teacher</button>
+      <button class="role-btn" onclick="setRole('admin')">Admin</button>
+      <button class="role-btn" onclick="setRole('parent')">Parent</button>
+    </div>
+    <nav id="nav" style="flex:1;overflow-y:auto;padding:4px 0"></nav>
+    <div class="sidebar-user">
+      <div class="ava" id="ava">AL</div>
+      <div><div style="font-size:12px;color:#fff;font-weight:600" id="uname">Alex Lee</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4)" id="urole">Grade 10 · Student</div></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="ptitle">Dashboard</div>
+      <div class="topbar-r">
+        <span style="font-size:12px;color:var(--text2)" id="datestr"></span>
+        <button class="icon-btn" onclick="navigate('notifications')"><i class="ti ti-bell"></i><span class="notif-dot"></span></button>
+        <button class="icon-btn" onclick="navigate('messages')"><i class="ti ti-message-circle"></i></button>
+        <button class="icon-btn" onclick="navigate('settings')"><i class="ti ti-settings"></i></button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────
+let role = 'student', page = 'dash';
+let modalStack = [];
+let hwState = [false,false,false,false,true,true];
+let activeMsgIdx = 0;
+let notifRead = {};
+
+// ── Data ──────────────────────────────────────────────────────────
+const subjects = [
+  {n:'Mathematics',c:'#2563eb',avg:88.2,letter:'B+',teacher:'Ms. Rivera'},
+  {n:'English',c:'#7c3aed',avg:90.8,letter:'A-',teacher:'Mr. Jones'},
+  {n:'Science',c:'#16a34a',avg:74.2,letter:'C+',teacher:'Dr. Lam'},
+  {n:'History',c:'#d97706',avg:83.4,letter:'B',teacher:'Mrs. Clark'},
+  {n:'P.E.',c:'#0891b2',avg:96.2,letter:'A',teacher:'Coach Mills'}
+];
+
+let studentsDB = [
+  {id:1,name:'Alex Lee',email:'alex.lee@student.edu',grade:'Grade 10',gpa:3.7,att:'P',status:'active',phone:'555-0101',joined:'2023-09-01'},
+  {id:2,name:'Maria Gonzalez',email:'maria.g@student.edu',grade:'Grade 10',gpa:4.0,att:'P',status:'active',phone:'555-0102',joined:'2023-09-01'},
+  {id:3,name:'James Park',email:'james.p@student.edu',grade:'Grade 10',gpa:1.7,att:'A',status:'active',phone:'555-0103',joined:'2023-09-01'},
+  {id:4,name:'Sophie Turner',email:'sophie.t@student.edu',grade:'Grade 10',gpa:3.3,att:'L',status:'active',phone:'555-0104',joined:'2023-09-01'},
+  {id:5,name:'Noah Williams',email:'noah.w@student.edu',grade:'Grade 11',gpa:2.7,att:'P',status:'active',phone:'555-0105',joined:'2022-09-01'},
+  {id:6,name:'Emma Davis',email:'emma.d@student.edu',grade:'Grade 11',gpa:4.0,att:'P',status:'active',phone:'555-0106',joined:'2022-09-01'},
+  {id:7,name:'Liam Chen',email:'liam.c@student.edu',grade:'Grade 9',gpa:1.7,att:'A',status:'inactive',phone:'555-0107',joined:'2024-09-01'},
+  {id:8,name:'Olivia Kim',email:'olivia.k@student.edu',grade:'Grade 9',gpa:3.3,att:'P',status:'active',phone:'555-0108',joined:'2024-09-01'},
+];
+
+let teachersDB = [
+  {id:101,name:'Ms. Rivera',email:'rivera@edu.com',subject:'Mathematics',classes:['Math 10A','Math 10B','Math 11'],status:'active',phone:'555-0201',joined:'2019-08-15'},
+  {id:102,name:'Mr. Jones',email:'jones@edu.com',subject:'English',classes:['English 10','AP Literature'],status:'active',phone:'555-0202',joined:'2020-08-15'},
+  {id:103,name:'Dr. Lam',email:'lam@edu.com',subject:'Science',classes:['Physics H','Biology 10'],status:'active',phone:'555-0203',joined:'2018-08-15'},
+  {id:104,name:'Mrs. Clark',email:'clark@edu.com',subject:'History',classes:['History 10','World History'],status:'active',phone:'555-0204',joined:'2021-08-15'},
+  {id:105,name:'Coach Mills',email:'mills@edu.com',subject:'P.E.',classes:['P.E. All Grades'],status:'active',phone:'555-0205',joined:'2017-08-15'},
+  {id:106,name:'Ms. Osei',email:'osei@edu.com',subject:'Art',classes:['Art Studio','Advanced Art'],status:'active',phone:'555-0206',joined:'2022-08-15'},
+];
+
+let classesDB = [
+  {id:201,name:'Math 10A',subject:'Mathematics',grade:'Grade 10',teacher:'Ms. Rivera',teacherId:101,room:'204',schedule:'MWF 8:00-9:00',students:32,capacity:35,status:'active'},
+  {id:202,name:'Math 10B',subject:'Mathematics',grade:'Grade 10',teacher:'Ms. Rivera',teacherId:101,room:'204',schedule:'MWF 10:00-11:00',students:29,capacity:35,status:'active'},
+  {id:203,name:'English 10',subject:'English',grade:'Grade 10',teacher:'Mr. Jones',teacherId:102,room:'101',schedule:'TTh 9:00-10:30',students:30,capacity:30,status:'active'},
+  {id:204,name:'AP Literature',subject:'English',grade:'Grade 12',teacher:'Mr. Jones',teacherId:102,room:'101',schedule:'MWF 1:00-2:00',students:18,capacity:25,status:'active'},
+  {id:205,name:'Physics H',subject:'Science',grade:'Grade 11',teacher:'Dr. Lam',teacherId:103,room:'Lab 2',schedule:'TTh 11:00-12:30',students:24,capacity:28,status:'active'},
+  {id:206,name:'Biology 10',subject:'Science',grade:'Grade 10',teacher:'Dr. Lam',teacherId:103,room:'Lab 1',schedule:'MWF 2:00-3:00',students:31,capacity:32,status:'active'},
+  {id:207,name:'History 10',subject:'History',grade:'Grade 10',teacher:'Mrs. Clark',teacherId:104,room:'305',schedule:'TTh 8:00-9:30',students:28,capacity:35,status:'inactive'},
+  {id:208,name:'Art Studio',subject:'Art',grade:'All Grades',teacher:'Ms. Osei',teacherId:106,room:'Art Studio',schedule:'F 1:00-3:00',students:20,capacity:20,status:'active'},
+];
+
+let hwItems = [
+  {id:1,t:'Algebra Chapter 5 Problems',s:'Mathematics',due:'Jun 8',urgent:true,details:'Solve problems 1–30'},
+  {id:2,t:'Essay Draft: Modern Literature',s:'English',due:'Jun 10',urgent:false,details:'800–1000 words, MLA format'},
+  {id:3,t:'Lab Report: Photosynthesis',s:'Science',due:'Jun 12',urgent:false,details:'Include data table and conclusion'},
+  {id:4,t:'Map Assignment: WWI Borders',s:'History',due:'Jun 14',urgent:false,details:'Label all major countries'},
+  {id:5,t:'Poetry Analysis: Frost',s:'English',due:'Jun 5',urgent:false,details:'Completed'},
+  {id:6,t:'Chapter 4 Review',s:'Mathematics',due:'Jun 3',urgent:false,details:'Completed'},
+];
+
+const messages = [
+  {from:'Ms. Rivera',ava:'MR',color:'#7c3aed',preview:'Your midterm score has been updated',time:'10:32 AM',unread:true,thread:[{me:false,text:'Hi Alex, your midterm score has been updated to 88. Great improvement!'},{me:true,text:'Thank you Ms. Rivera! I worked really hard on it.'},{me:false,text:'It shows! Keep it up. Let me know if you need help with Chapter 5.'}]},
+  {from:'Principal Patel',ava:'DP',color:'#0891b2',preview:'All students reminded that...',time:'9:15 AM',unread:true,thread:[{me:false,text:'All students are reminded that the science fair is on June 20th. Participation is encouraged!'}]},
+  {from:'Mr. Jones (English)',ava:'JO',color:'#16a34a',preview:'Your essay draft is due Friday',time:'Yesterday',unread:false,thread:[{me:false,text:'Just a reminder — your essay draft is due this Friday. Let me know if you have questions.'},{me:true,text:'Got it, I\'ll submit by Thursday!'},{me:false,text:'Sure, send the outline over if you want feedback.'}]},
+];
+
+const notifs = [
+  {icon:'ti-award',color:'#7c3aed',bg:'#ede9fe',title:'Grade Updated',body:'Ms. Rivera updated your Mathematics midterm grade to 88 (B+).',time:'10 mins ago'},
+  {icon:'ti-calendar-times',color:'#dc2626',bg:'#fee2e2',title:'Absence Recorded',body:'An absence was recorded for Science on June 5th. Please submit a note.',time:'1 hour ago'},
+  {icon:'ti-books',color:'#d97706',bg:'#fef3c7',title:'Assignment Due Soon',body:'Algebra Chapter 5 is due tomorrow, June 8th.',time:'3 hours ago'},
+  {icon:'ti-message-circle',color:'#2563eb',bg:'#dbeafe',title:'New Message',body:'Ms. Rivera sent you a message about your midterm score.',time:'Today 10:32 AM'},
+  {icon:'ti-trophy',color:'#16a34a',bg:'#dcfce7',title:'Achievement',body:'You\'ve maintained 90%+ attendance for the past month!',time:'Yesterday'},
+];
+
+const ROLES_CFG = {
+  student:{name:'Alex Lee',role:'Grade 10 · Student',ava:'AL',color:'#2563eb',
+    nav:[{s:'Main',items:[{i:'ti-layout-dashboard',l:'Dashboard',id:'dash'},{i:'ti-calendar-check',l:'Attendance',id:'attendance'},{i:'ti-award',l:'Grades',id:'grades'},{i:'ti-books',l:'Homework',id:'homework'}]},{s:'More',items:[{i:'ti-calendar',l:'Schedule',id:'schedule'},{i:'ti-message-circle',l:'Messages',id:'messages',badge:2},{i:'ti-bell',l:'Notifications',id:'notifications',badge:3}]}]},
+  teacher:{name:'Ms. Rivera',role:'Mathematics · Teacher',ava:'MR',color:'#7c3aed',
+    nav:[{s:'Teaching',items:[{i:'ti-layout-dashboard',l:'Dashboard',id:'dash'},{i:'ti-users',l:'Attendance',id:'attendance'},{i:'ti-pencil',l:'Grade Book',id:'grades'},{i:'ti-clipboard-list',l:'Assignments',id:'homework'}]},{s:'Tools',items:[{i:'ti-calendar',l:'Schedule',id:'schedule'},{i:'ti-chart-bar',l:'Reports',id:'reports'},{i:'ti-message-circle',l:'Messages',id:'messages',badge:2},{i:'ti-bell',l:'Notifications',id:'notifications',badge:2}]}]},
+  admin:{name:'Dr. Patel',role:'Principal · Admin',ava:'DP',color:'#0891b2',
+    nav:[{s:'Dashboard',items:[{i:'ti-layout-dashboard',l:'Overview',id:'dash'}]},{s:'Manage',items:[{i:'ti-users',l:'Students',id:'admin-students'},{i:'ti-chalkboard',l:'Teachers',id:'admin-teachers'},{i:'ti-book',l:'Classes',id:'admin-classes'}]},{s:'School',items:[{i:'ti-calendar',l:'Schedule',id:'schedule'},{i:'ti-chart-pie',l:'Analytics',id:'admin-analytics'},{i:'ti-chart-bar',l:'Reports',id:'reports'},{i:'ti-message-circle',l:'Messages',id:'messages',badge:4},{i:'ti-bell',l:'Notifications',id:'notifications',badge:2},{i:'ti-settings',l:'Settings',id:'settings'}]}]},
+  parent:{name:'Mr. & Mrs. Lee',role:'Parent · Alex Lee',ava:'PL',color:'#d97706',
+    nav:[{s:'My Child',items:[{i:'ti-layout-dashboard',l:'Overview',id:'dash'},{i:'ti-calendar-check',l:'Attendance',id:'attendance'},{i:'ti-award',l:'Grades',id:'grades'},{i:'ti-books',l:'Homework',id:'homework'}]},{s:'Communication',items:[{i:'ti-message-circle',l:'Messages',id:'messages',badge:1},{i:'ti-bell',l:'Notifications',id:'notifications',badge:1},{i:'ti-file-report',l:'Reports',id:'reports'}]}]}
+};
+
+// ── Core Helpers ──────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<i class="ti ${type==='success'?'ti-check':type==='error'?'ti-x':'ti-info-circle'}"></i>${msg}`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function showModal(html, onClose) {
+  const mr = document.getElementById('modal-root');
+  mr.innerHTML = `<div class="modal-overlay" id="modal-overlay" onclick="e=>{if(e.target.id==='modal-overlay')closeModal()}">${html}</div>`;
+  document.getElementById('modal-overlay').onclick = e => { if(e.target.id==='modal-overlay') closeModal(); };
+}
+
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+function setRole(r) {
+  role = r;
+  document.querySelectorAll('.role-btn').forEach((b,i) => b.classList.toggle('active',['student','teacher','admin','parent'][i]===r));
+  const u = ROLES_CFG[r];
+  document.getElementById('uname').textContent = u.name;
+  document.getElementById('urole').textContent = u.role;
+  document.getElementById('ava').textContent = u.ava;
+  document.getElementById('ava').style.background = u.color;
+  navigate('dash');
+}
+
+function navigate(p) {
+  page = p;
+  renderNav();
+  const titles = {dash:'Dashboard','admin-students':'Manage Students','admin-teachers':'Manage Teachers','admin-classes':'Manage Classes','admin-analytics':'Analytics',attendance:role==='teacher'?'Attendance':'My Attendance',grades:role==='teacher'?'Grade Book':'My Grades',homework:role==='teacher'?'Assignments':'Homework',schedule:'Weekly Schedule',messages:'Messages',notifications:'Notifications',reports:'Reports',settings:'Settings'};
+  document.getElementById('ptitle').textContent = titles[p] || p;
+  const fn = allPages[p];
+  document.getElementById('content').innerHTML = fn ? fn() : `<div class="empty-state"><i class="ti ti-tool"></i><p>Coming soon</p></div>`;
+  bindAll();
+}
+
+function renderNav() {
+  const u = ROLES_CFG[role];
+  document.getElementById('nav').innerHTML = u.nav.map(sec => `
+    <div class="nav-section">${sec.s}</div>
+    ${sec.items.map(n=>`<div class="nav-item${n.id===page?' active':''}" onclick="navigate('${n.id}')">
+      <i class="ti ${n.i}"></i>${n.l}${n.badge?`<span class="nav-badge">${n.badge}</span>`:''}
+    </div>`).join('')}`).join('');
+}
+
+function initials(name) { return name.split(' ').map(x=>x[0]).join('').toUpperCase(); }
+function gpaColor(g) { return g>=3.5?'#16a34a':g>=2.5?'#2563eb':g>=2?'#d97706':'#dc2626'; }
+function statusPill(s) { return s==='active'?'pill-green':'pill-red'; }
+
+function bindAll() {
+  document.querySelectorAll('.hw-check').forEach((el,i) => {
+    el.onclick = () => { hwState[i]=!hwState[i]; el.classList.toggle('done',hwState[i]); el.innerHTML=hwState[i]?'<i class="ti ti-check"></i>':''; };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADMIN: STUDENT MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function adminStudentModal(student=null) {
+  const isEdit = !!student;
+  showModal(`<div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">${isEdit?'Edit Student':'Add New Student'}</span>
+      <button class="btn btn-sm" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Full Name *</div><input class="input" id="f-name" placeholder="e.g. John Smith" value="${student?.name||''}"></div>
+        <div class="form-group"><div class="form-label">Email *</div><input class="input" id="f-email" type="email" placeholder="student@school.edu" value="${student?.email||''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Grade *</div>
+          <select class="select" id="f-grade">
+            ${['Grade 9','Grade 10','Grade 11','Grade 12'].map(g=>`<option${student?.grade===g?' selected':''}>${g}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Phone</div><input class="input" id="f-phone" placeholder="555-0100" value="${student?.phone||''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Status</div>
+          <select class="select" id="f-status">
+            <option value="active"${student?.status!=='inactive'?' selected':''}>Active</option>
+            <option value="inactive"${student?.status==='inactive'?' selected':''}>Inactive</option>
+          </select>
+        </div>
+        ${!isEdit?`<div class="form-group"><div class="form-label">Password *</div><input class="input" id="f-pass" type="password" placeholder="Temporary password"></div>`:'<div></div>'}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudent(${student?.id||'null'})">${isEdit?'Save Changes':'Add Student'}</button>
+    </div>
+  </div>`);
+}
+
+function saveStudent(id) {
+  const name=document.getElementById('f-name').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const grade=document.getElementById('f-grade').value;
+  const phone=document.getElementById('f-phone').value.trim();
+  const status=document.getElementById('f-status').value;
+  if (!name||!email) { toast('Name and email are required','error'); return; }
+  if (id) {
+    const idx = studentsDB.findIndex(s=>s.id===id);
+    studentsDB[idx] = {...studentsDB[idx],name,email,grade,phone,status};
+    toast('Student updated successfully','success');
+  } else {
+    if (studentsDB.find(s=>s.email===email)) { toast('Email already exists','error'); return; }
+    studentsDB.push({id:Date.now(),name,email,grade,phone,status,gpa:0,att:'P',joined:new Date().toISOString().split('T')[0]});
+    toast('Student added successfully','success');
+  }
+  closeModal(); navigate('admin-students');
+}
+
+function deleteStudent(id) {
+  if (!confirm('Are you sure you want to remove this student? This cannot be undone.')) return;
+  studentsDB = studentsDB.filter(s=>s.id!==id);
+  toast('Student removed','success'); navigate('admin-students');
+}
+
+function toggleStudentStatus(id) {
+  const s = studentsDB.find(s=>s.id===id);
+  s.status = s.status==='active'?'inactive':'active';
+  toast(`Student ${s.status==='active'?'activated':'deactivated'}`,'success'); navigate('admin-students');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADMIN: TEACHER MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function adminTeacherModal(teacher=null) {
+  const isEdit = !!teacher;
+  showModal(`<div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">${isEdit?'Edit Teacher':'Add New Teacher'}</span>
+      <button class="btn btn-sm" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Full Name *</div><input class="input" id="f-name" placeholder="e.g. Ms. Johnson" value="${teacher?.name||''}"></div>
+        <div class="form-group"><div class="form-label">Email *</div><input class="input" id="f-email" type="email" placeholder="teacher@school.edu" value="${teacher?.email||''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Subject / Department *</div>
+          <select class="select" id="f-subject">
+            ${['Mathematics','English','Science','History','P.E.','Art','Music','Computer Science','Languages'].map(s=>`<option${teacher?.subject===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Phone</div><input class="input" id="f-phone" placeholder="555-0200" value="${teacher?.phone||''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Status</div>
+          <select class="select" id="f-status">
+            <option value="active"${teacher?.status!=='inactive'?' selected':''}>Active</option>
+            <option value="inactive"${teacher?.status==='inactive'?' selected':''}>Inactive / On Leave</option>
+          </select>
+        </div>
+        ${!isEdit?`<div class="form-group"><div class="form-label">Temporary Password *</div><input class="input" id="f-pass" type="password" placeholder="Set initial password"></div>`:'<div></div>'}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeacher(${teacher?.id||'null'})">${isEdit?'Save Changes':'Add Teacher'}</button>
+    </div>
+  </div>`);
+}
+
+function saveTeacher(id) {
+  const name=document.getElementById('f-name').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const subject=document.getElementById('f-subject').value;
+  const phone=document.getElementById('f-phone').value.trim();
+  const status=document.getElementById('f-status').value;
+  if (!name||!email) { toast('Name and email required','error'); return; }
+  if (id) {
+    const idx = teachersDB.findIndex(t=>t.id===id);
+    teachersDB[idx] = {...teachersDB[idx],name,email,subject,phone,status};
+    toast('Teacher updated','success');
+  } else {
+    teachersDB.push({id:Date.now(),name,email,subject,phone,status,classes:[],joined:new Date().toISOString().split('T')[0]});
+    toast('Teacher added successfully','success');
+  }
+  closeModal(); navigate('admin-teachers');
+}
+
+function deleteTeacher(id) {
+  if (!confirm('Remove this teacher? Their classes will become unassigned.')) return;
+  teachersDB = teachersDB.filter(t=>t.id!==id);
+  toast('Teacher removed','success'); navigate('admin-teachers');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADMIN: CLASS MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function adminClassModal(cls=null) {
+  const isEdit = !!cls;
+  showModal(`<div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">${isEdit?'Edit Class':'Add New Class'}</span>
+      <button class="btn btn-sm" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Class Name *</div><input class="input" id="f-name" placeholder="e.g. Math 10A" value="${cls?.name||''}"></div>
+        <div class="form-group"><div class="form-label">Subject *</div>
+          <select class="select" id="f-subject">
+            ${['Mathematics','English','Science','History','P.E.','Art','Music','Computer Science','Languages'].map(s=>`<option${cls?.subject===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Grade Level *</div>
+          <select class="select" id="f-grade">
+            ${['Grade 9','Grade 10','Grade 11','Grade 12','All Grades'].map(g=>`<option${cls?.grade===g?' selected':''}>${g}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Assign Teacher *</div>
+          <select class="select" id="f-teacher">
+            <option value="">-- Select Teacher --</option>
+            ${teachersDB.filter(t=>t.status==='active').map(t=>`<option value="${t.id}"${cls?.teacherId===t.id?' selected':''}>${t.name} (${t.subject})</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Room</div><input class="input" id="f-room" placeholder="e.g. Room 204" value="${cls?.room||''}"></div>
+        <div class="form-group"><div class="form-label">Capacity</div><input class="input" id="f-cap" type="number" placeholder="30" value="${cls?.capacity||30}"></div>
+      </div>
+      <div class="form-group"><div class="form-label">Schedule</div><input class="input" id="f-schedule" placeholder="e.g. Mon/Wed/Fri 8:00–9:00 AM" value="${cls?.schedule||''}"></div>
+      <div class="form-group"><div class="form-label">Status</div>
+        <select class="select" id="f-status">
+          <option value="active"${cls?.status!=='inactive'?' selected':''}>Active</option>
+          <option value="inactive"${cls?.status==='inactive'?' selected':''}>Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClass(${cls?.id||'null'})">${isEdit?'Save Changes':'Create Class'}</button>
+    </div>
+  </div>`);
+}
+
+function saveClass(id) {
+  const name=document.getElementById('f-name').value.trim();
+  const subject=document.getElementById('f-subject').value;
+  const grade=document.getElementById('f-grade').value;
+  const teacherId=parseInt(document.getElementById('f-teacher').value)||null;
+  const teacher=teachersDB.find(t=>t.id===teacherId)?.name||'Unassigned';
+  const room=document.getElementById('f-room').value.trim();
+  const capacity=parseInt(document.getElementById('f-cap').value)||30;
+  const schedule=document.getElementById('f-schedule').value.trim();
+  const status=document.getElementById('f-status').value;
+  if (!name) { toast('Class name required','error'); return; }
+  if (id) {
+    const idx = classesDB.findIndex(c=>c.id===id);
+    classesDB[idx]={...classesDB[idx],name,subject,grade,teacherId,teacher,room,capacity,schedule,status};
+    toast('Class updated','success');
+  } else {
+    classesDB.push({id:Date.now(),name,subject,grade,teacherId,teacher,room,capacity,schedule,status,students:0});
+    toast('Class created successfully','success');
+  }
+  closeModal(); navigate('admin-classes');
+}
+
+function deleteClass(id) {
+  if (!confirm('Delete this class? All enrollment data will be removed.')) return;
+  classesDB = classesDB.filter(c=>c.id!==id);
+  toast('Class deleted','success'); navigate('admin-classes');
+}
+
+function viewClassStudents(cls) {
+  const enrolled = studentsDB.filter(s=>s.grade===cls.grade).slice(0,cls.students);
+  showModal(`<div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">${cls.name} — Enrolled Students</span>
+      <button class="btn btn-sm" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="notice info"><i class="ti ti-info-circle"></i>${cls.students}/${cls.capacity} students enrolled</div>
+      <div class="search-bar"><input class="input" placeholder="Search students to add..." style="flex:1">
+        <button class="btn btn-primary btn-sm" onclick="toast('Student added to class','success')"><i class="ti ti-plus"></i> Add Student</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Name</th><th>Grade</th><th>GPA</th><th>Action</th></tr></thead><tbody>
+          ${enrolled.map(s=>`<tr>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="big-ava" style="width:28px;height:28px;font-size:10px;background:${gpaColor(s.gpa)}">${initials(s.name)}</div>${s.name}</div></td>
+            <td>${s.grade}</td><td style="color:${gpaColor(s.gpa)};font-weight:700">${s.gpa.toFixed(1)}</td>
+            <td><button class="btn btn-xs btn-danger" onclick="toast('Student removed from class','success')"><i class="ti ti-user-minus"></i> Remove</button></td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal()">Done</button></div>
+  </div>`);
+}
+
+// ── Messages ──────────────────────────────────────────────────
+function sendMsg() {
+  const inp = document.getElementById('msgInput');
+  if (!inp?.value.trim()) return;
+  messages[activeMsgIdx].thread.push({me:true,text:inp.value.trim()});
+  navigate('messages');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PAGE RENDERERS
+// ═══════════════════════════════════════════════════════════════
+const allPages = {
+
+// ── Student/Parent Dash ────────────────────────────────────────
+dash() {
+  if (role==='admin') return adminDash();
+  if (role==='parent') return parentPortal();
+  return `
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-calendar-check"></i></div><div class="stat-label">Attendance</div><div class="stat-val">92%</div><div class="stat-sub" style="color:#16a34a">↑ On track</div></div>
+    <div class="stat-card" style="border-top:3px solid #7c3aed"><div class="stat-icon" style="color:#7c3aed"><i class="ti ti-award"></i></div><div class="stat-label">GPA</div><div class="stat-val">3.7</div><div class="stat-sub" style="color:#16a34a">↑ 0.2 from last term</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-books"></i></div><div class="stat-label">Homework Due</div><div class="stat-val">${hwState.filter(x=>!x).length}</div><div class="stat-sub">${hwState.filter(Boolean).length} completed</div></div>
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-trophy"></i></div><div class="stat-label">Class Rank</div><div class="stat-val">#5</div><div class="stat-sub">Top 16% of grade</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Grades by Subject</span><button class="btn btn-sm" onclick="navigate('grades')">View all</button></div>
+      ${subjects.map(s=>`<div class="grade-row"><span style="font-size:13px;font-weight:600;min-width:110px">${s.n}</span><div class="bar-wrap" style="flex:1"><div class="bar" style="width:${s.avg}%;background:${s.c}"></div></div><span style="font-weight:700;color:${s.c};margin-left:8px">${Math.round(s.avg)}</span><span class="pill" style="background:${s.c}20;color:${s.c};margin-left:4px">${s.letter}</span></div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Upcoming Homework</span><button class="btn btn-sm" onclick="navigate('homework')">View all</button></div>
+      ${hwItems.slice(0,4).map((h,i)=>`<div class="hw-item"><div class="hw-check${hwState[i]?' done':''}">${hwState[i]?'<i class="ti ti-check"></i>':''}</div><div style="flex:1"><div style="font-size:13px;font-weight:600;${hwState[i]?'text-decoration:line-through;color:var(--text2)':''}">${h.t}</div><div style="font-size:11px;color:var(--text2);margin-top:3px;display:flex;gap:6px"><span class="pill pill-blue">${h.s}</span><span class="pill ${h.urgent?'pill-red':'pill-amber'}">${h.urgent?'Due tomorrow':'Due '+h.due}</span></div></div></div>`).join('')}
+    </div>
+  </div>`;
+},
+
+attendance() {
+  if (role==='teacher') return teacherAttendance();
+  const days=['P','P','P','P','P','','','P','P','A','P','P','','','P','L','P','P','P','','','P','P','P','P','P','',''];
+  return `
+  <div class="notice info"><i class="ti ti-info-circle"></i>You have 1 absence this month. A parent note is required within 3 days.</div>
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-check"></i></div><div class="stat-label">Present</div><div class="stat-val">23</div></div>
+    <div class="stat-card" style="border-top:3px solid #dc2626"><div class="stat-icon" style="color:#dc2626"><i class="ti ti-x"></i></div><div class="stat-label">Absent</div><div class="stat-val">1</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-clock"></i></div><div class="stat-label">Late</div><div class="stat-val">1</div></div>
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-chart-bar"></i></div><div class="stat-label">Rate</div><div class="stat-val">92%</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">June 2026 Calendar</span></div>
+      <div class="cal-grid">
+        ${['M','T','W','T','F','S','S'].map(d=>`<div class="cal-day-name">${d}</div>`).join('')}
+        ${days.map(d=>`<div class="cal-day ${d==='P'?'cal-p':d==='A'?'cal-a':d==='L'?'cal-l':'cal-empty'}">${d||''}</div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">By Subject</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Present</th><th>Absent</th><th>Rate</th></tr></thead><tbody>
+        ${[['Mathematics',23,1,'92%'],['English',24,0,'96%'],['Science',22,2,'88%'],['History',24,1,'96%'],['P.E.',20,0,'100%']].map(([s,p,a,r])=>`<tr><td style="font-weight:600">${s}</td><td><span class="pill pill-green">${p}</span></td><td><span class="pill ${a>0?'pill-red':'pill-green'}">${a}</span></td><td style="font-weight:700">${r}</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+  </div>`;
+},
+
+grades() {
+  if (role==='teacher') return teacherGrades();
+  return `
+  <div class="stat-grid">
+    ${subjects.map(s=>`<div class="stat-card" style="border-top:3px solid ${s.c}"><div class="stat-icon" style="color:${s.c}"><i class="ti ti-book"></i></div><div class="stat-label">${s.n}</div><div class="stat-val" style="color:${s.c}">${Math.round(s.avg)}</div><div class="stat-sub">${s.letter}</div></div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Detailed Breakdown</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Assignments</th><th>Quiz Avg</th><th>Midterm</th><th>Overall</th><th>Letter</th><th>Teacher</th></tr></thead><tbody>
+      ${subjects.map(s=>`<tr><td style="font-weight:700">${s.n}</td><td>85</td><td>88</td><td>90</td><td style="font-weight:700;color:${s.c}">${Math.round(s.avg)}</td><td><span class="pill" style="background:${s.c}20;color:${s.c}">${s.letter}</span></td><td class="text-muted" style="color:var(--text2)">${s.teacher}</td></tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+},
+
+homework() {
+  if (role==='teacher') return teacherHomework();
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="display:flex;gap:8px"><span class="pill pill-amber">${hwState.filter(x=>!x).length} pending</span><span class="pill pill-green">${hwState.filter(Boolean).length} done</span></div>
+    <select class="select" style="width:140px"><option>All subjects</option>${subjects.map(s=>`<option>${s.n}</option>`).join('')}</select>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Pending</span></div>
+    ${hwItems.map((h,i)=>hwState[i]?'':
+      `<div class="hw-item"><div class="hw-check" id="hwc${i}"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">${h.t}</div><div style="font-size:11px;color:var(--text2);margin-top:3px;display:flex;gap:6px"><span class="pill pill-blue">${h.s}</span><span class="pill ${h.urgent?'pill-red':'pill-amber'}">${h.urgent?'Due tomorrow':'Due '+h.due}</span></div></div></div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Completed</span></div>
+    ${hwItems.map((h,i)=>!hwState[i]?'':
+      `<div class="hw-item"><div class="hw-check done"><i class="ti ti-check"></i></div><div style="flex:1;opacity:.6"><div style="font-size:13px;font-weight:600;text-decoration:line-through">${h.t}</div><div style="font-size:11px;color:var(--text2);margin-top:3px">${h.s} · Submitted ${h.due}</div></div><span class="pill pill-green">Graded</span></div>`).join('')}
+  </div>`;
+},
+
+schedule() {
+  const times=['8:00','9:00','10:00','11:00','12:00','1:00','2:00','3:00'];
+  const days=['Mon','Tue','Wed','Thu','Fri'];
+  const grid=Array.from({length:8},()=>Array(5).fill(null));
+  const cls=[
+    {s:'Mathematics',c:'#2563eb',d:0,p:0},{s:'Science',c:'#16a34a',d:0,p:2},{s:'Lunch',c:'#94a3b8',d:0,p:4,lunch:true},
+    {s:'English',c:'#7c3aed',d:1,p:0},{s:'Art',c:'#db2777',d:1,p:3},{s:'Lunch',c:'#94a3b8',d:1,p:4,lunch:true},
+    {s:'Mathematics',c:'#2563eb',d:2,p:0},{s:'History',c:'#d97706',d:2,p:1},{s:'Lunch',c:'#94a3b8',d:2,p:4,lunch:true},
+    {s:'English',c:'#7c3aed',d:3,p:2},{s:'Free',c:'#e2e8f0',d:3,p:3,free:true},{s:'Lunch',c:'#94a3b8',d:3,p:4,lunch:true},
+    {s:'History',c:'#d97706',d:4,p:0},{s:'Science',c:'#16a34a',d:4,p:1},{s:'Mathematics',c:'#2563eb',d:4,p:2},{s:'P.E.',c:'#0891b2',d:4,p:3},{s:'Lunch',c:'#94a3b8',d:4,p:4,lunch:true},
+  ];
+  cls.forEach(c=>grid[c.p][c.d]=c);
+  return `<div class="sch-grid">
+    <div class="sch-hdr">Time</div>${days.map(d=>`<div class="sch-hdr">${d}</div>`).join('')}
+    ${times.map((t,pi)=>`<div class="sch-time">${t}</div>${[0,1,2,3,4].map(di=>{
+      const c=grid[pi][di];
+      if(!c) return `<div class="sch-cell"></div>`;
+      if(c.lunch) return `<div class="sch-cell"><div class="sch-cls" style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:700">🍽 Lunch</div></div>`;
+      if(c.free) return `<div class="sch-cell"><div class="sch-cls" style="background:#f8fafc;color:#94a3b8;font-size:11px">Free</div></div>`;
+      return `<div class="sch-cell"><div class="sch-cls" style="background:${c.c}15;border-left:3px solid ${c.c}"><div style="font-size:11px;font-weight:700;color:${c.c}">${c.s}</div></div></div>`;
+    }).join('')}`).join('')}
+  </div>`;
+},
+
+messages() {
+  const m=messages[activeMsgIdx];
+  return `<div class="msg-layout">
+    <div class="msg-list">
+      <div style="padding:10px"><input class="input" placeholder="Search..." style="font-size:12px"></div>
+      ${messages.map((msg,i)=>`<div class="msg-item${i===activeMsgIdx?' active':''}" onclick="activeMsgIdx=${i};navigate('messages')">
+        <div class="big-ava" style="width:36px;height:36px;font-size:12px;background:${msg.color}">${msg.ava}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:${msg.unread?700:500}">${msg.from}</div>
+          <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">${msg.preview}</div>
+        </div>
+        <div style="font-size:10px;color:var(--text3)">${msg.time}</div>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;flex-direction:column;background:var(--bg)">
+      <div style="padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <div class="big-ava" style="width:36px;height:36px;font-size:12px;background:${m.color}">${m.ava}</div>
+        <div><div style="font-size:14px;font-weight:700">${m.from}</div><div style="font-size:11px;color:var(--text2)">Active today</div></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+        ${m.thread.map(b=>`<div class="bubble-wrap${b.me?' me':''}">
+          ${!b.me?`<div class="big-ava" style="width:28px;height:28px;font-size:10px;background:${m.color}">${m.ava}</div>`:''}
+          <div class="bubble ${b.me?'bubble-me':'bubble-in'}">${b.text}</div>
+        </div>`).join('')}
+      </div>
+      <div style="padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px">
+        <input class="input" id="msgInput" placeholder="Type a message..." style="flex:1" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="btn btn-primary" onclick="sendMsg()"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+  </div>`;
+},
+
+notifications() {
+  return `
+  <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-sm" onclick="notifRead={};navigate('notifications')">Mark all read</button></div>
+  <div class="card">
+    ${notifs.map((n,i)=>`<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);background:${!notifRead[i]?'#fafbff':'transparent'}" onclick="notifRead[${i}]=true;navigate('notifications')">
+      <div style="width:38px;height:38px;border-radius:10px;background:${n.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ${n.icon}" style="color:${n.color};font-size:17px"></i>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700">${n.title}${!notifRead[i]?'<span class="pill pill-blue" style="margin-left:6px;font-size:10px;padding:1px 6px">New</span>':''}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">${n.body}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">${n.time}</div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+},
+
+reports() {
+  return `
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-trending-up"></i></div><div class="stat-label">Pass Rate</div><div class="stat-val">94%</div><div class="stat-sub" style="color:#16a34a">↑ 2% this term</div></div>
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-star"></i></div><div class="stat-label">A Students</div><div class="stat-val">18</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-alert-triangle"></i></div><div class="stat-label">At Risk</div><div class="stat-val">4</div></div>
+    <div class="stat-card" style="border-top:3px solid #0891b2"><div class="stat-icon" style="color:#0891b2"><i class="ti ti-calendar-check"></i></div><div class="stat-label">Avg Attendance</div><div class="stat-val">93%</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Grade Distribution</span></div>
+      ${[['A (90–100)',18,20,'#16a34a'],['B (80–89)',34,38,'#2563eb'],['C (70–79)',28,31,'#d97706'],['D (60–69)',7,8,'#dc2626'],['F (<60)',2,2,'#991b1b']].map(([l,n,p,c])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600;min-width:110px">${l}</span><div class="bar-wrap" style="flex:1"><div class="bar" style="width:${p*3}%;background:${c}"></div></div><span style="font-size:13px;font-weight:700;color:${c};min-width:28px;text-align:right">${n}</span></div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Export Reports</span></div>
+      ${[['ti-file-spreadsheet','Attendance Report (CSV)'],['ti-file-text','Grade Report (PDF)'],['ti-chart-bar','Analytics Summary'],['ti-users','Student Progress Report']].map(([icon,label])=>`
+        <button class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px" onclick="toast('Generating ${label}...','info')">
+          <i class="ti ${icon}" style="font-size:16px"></i>${label}
+        </button>`).join('')}
+    </div>
+  </div>`;
+},
+
+settings() {
+  return `<div class="grid2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">School Information</span></div>
+      <div class="form-group"><div class="form-label">School Name</div><input class="input" value="Westfield Academy"></div>
+      <div class="form-group"><div class="form-label">Principal</div><input class="input" value="Dr. Patel"></div>
+      <div class="form-row"><div class="form-group"><div class="form-label">Academic Year</div><input class="input" value="2025–2026"></div><div class="form-group"><div class="form-label">Term</div><select class="select"><option>Term 3</option></select></div></div>
+      <button class="btn btn-primary" onclick="toast('Settings saved','success')">Save Changes</button>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Grading Scale</span></div>
+      <div class="form-row"><div class="form-group"><div class="form-label">A Minimum</div><input class="input" type="number" value="90"></div><div class="form-group"><div class="form-label">B Minimum</div><input class="input" type="number" value="80"></div></div>
+      <div class="form-row"><div class="form-group"><div class="form-label">C Minimum</div><input class="input" type="number" value="70"></div><div class="form-group"><div class="form-label">D Minimum</div><input class="input" type="number" value="60"></div></div>
+      <hr class="divider">
+      <div class="form-label" style="margin-bottom:8px">Notifications</div>
+      ${[['Email parents on absence',true],['Alert on failing grade',true],['Weekly progress reports',false],['Homework reminders',true]].map(([l,c])=>`<label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;font-size:13px"><input type="checkbox" ${c?'checked':''}>${l}</label>`).join('')}
+      <button class="btn btn-primary" onclick="toast('Settings saved','success')">Save Settings</button>
+    </div>
+  </div>`;
+},
+
+// ── ADMIN PAGES ───────────────────────────────────────────────
+'admin-students'() {
+  const active = studentsDB.filter(s=>s.status==='active').length;
+  const atRisk = studentsDB.filter(s=>s.gpa<2.0).length;
+  return `
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-users"></i></div><div class="stat-label">Total Students</div><div class="stat-val">${studentsDB.length}</div></div>
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-user-check"></i></div><div class="stat-label">Active</div><div class="stat-val">${active}</div></div>
+    <div class="stat-card" style="border-top:3px solid #dc2626"><div class="stat-icon" style="color:#dc2626"><i class="ti ti-alert-triangle"></i></div><div class="stat-label">At Risk</div><div class="stat-val">${atRisk}</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-user-off"></i></div><div class="stat-label">Inactive</div><div class="stat-val">${studentsDB.length-active}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input class="input" placeholder="Search students..." style="width:220px" oninput="filterStudents(this.value)">
+        <select class="select" style="width:120px" onchange="filterByGrade(this.value)"><option value="">All Grades</option>${['Grade 9','Grade 10','Grade 11','Grade 12'].map(g=>`<option>${g}</option>`).join('')}</select>
+        <select class="select" style="width:120px"><option value="">All Status</option><option>Active</option><option>Inactive</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="adminStudentModal()"><i class="ti ti-plus"></i> Add Student</button>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Student</th><th>Grade</th><th>GPA</th><th>Attendance</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="students-tbody">
+      ${studentsDB.map(s=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:10px">
+          <div class="big-ava" style="width:32px;height:32px;font-size:11px;background:${gpaColor(s.gpa)}">${initials(s.name)}</div>
+          <div><div style="font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--text2)">${s.email}</div></div>
+        </div></td>
+        <td>${s.grade}</td>
+        <td><span style="font-weight:700;color:${gpaColor(s.gpa)}">${s.gpa.toFixed(1)}</span></td>
+        <td>${s.att==='P'?'94%':s.att==='L'?'88%':'72%'}</td>
+        <td><span class="pill ${statusPill(s.status)}">${s.status}</span></td>
+        <td style="color:var(--text2);font-size:12px">${s.joined}</td>
+        <td><div style="display:flex;gap:4px">
+          <button class="btn btn-xs" onclick="adminStudentModal(studentsDB.find(x=>x.id===${s.id}))" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-xs" onclick="toggleStudentStatus(${s.id})" title="${s.status==='active'?'Deactivate':'Activate'}"><i class="ti ti-${s.status==='active'?'user-off':'user-check'}"></i></button>
+          <button class="btn btn-xs btn-danger" onclick="deleteStudent(${s.id})" title="Delete"><i class="ti ti-trash"></i></button>
+        </div></td>
+      </tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+},
+
+'admin-teachers'() {
+  const active = teachersDB.filter(t=>t.status==='active').length;
+  return `
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #7c3aed"><div class="stat-icon" style="color:#7c3aed"><i class="ti ti-chalkboard"></i></div><div class="stat-label">Total Teachers</div><div class="stat-val">${teachersDB.length}</div></div>
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-user-check"></i></div><div class="stat-label">Active</div><div class="stat-val">${active}</div></div>
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-book"></i></div><div class="stat-label">Total Classes</div><div class="stat-val">${classesDB.length}</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-building"></i></div><div class="stat-label">Departments</div><div class="stat-val">6</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="input" placeholder="Search teachers..." style="width:220px">
+        <select class="select" style="width:150px"><option>All Departments</option>${['Mathematics','English','Science','History','P.E.','Art'].map(d=>`<option>${d}</option>`).join('')}</select>
+      </div>
+      <button class="btn btn-primary" onclick="adminTeacherModal()"><i class="ti ti-plus"></i> Add Teacher</button>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Teacher</th><th>Subject</th><th>Classes</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>
+      ${teachersDB.map(t=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:10px">
+          <div class="big-ava" style="width:32px;height:32px;font-size:11px;background:#7c3aed">${initials(t.name)}</div>
+          <div><div style="font-weight:700">${t.name}</div><div style="font-size:11px;color:var(--text2)">${t.email}</div></div>
+        </div></td>
+        <td><span class="pill pill-purple">${t.subject}</span></td>
+        <td>${t.classes.length} class${t.classes.length!==1?'es':''}</td>
+        <td><span class="pill ${statusPill(t.status)}">${t.status}</span></td>
+        <td style="color:var(--text2);font-size:12px">${t.joined}</td>
+        <td><div style="display:flex;gap:4px">
+          <button class="btn btn-xs" onclick="adminTeacherModal(teachersDB.find(x=>x.id===${t.id}))" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-xs" title="View classes" onclick="toast('${t.name} teaches: ${t.classes.join(', ')}','info')"><i class="ti ti-book"></i></button>
+          <button class="btn btn-xs btn-danger" onclick="deleteTeacher(${t.id})" title="Remove"><i class="ti ti-trash"></i></button>
+        </div></td>
+      </tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+},
+
+'admin-classes'() {
+  const active = classesDB.filter(c=>c.status==='active').length;
+  const total = classesDB.reduce((a,c)=>a+c.students,0);
+  return `
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-book"></i></div><div class="stat-label">Total Classes</div><div class="stat-val">${classesDB.length}</div></div>
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-book-2"></i></div><div class="stat-label">Active Classes</div><div class="stat-val">${active}</div></div>
+    <div class="stat-card" style="border-top:3px solid #7c3aed"><div class="stat-icon" style="color:#7c3aed"><i class="ti ti-users"></i></div><div class="stat-label">Total Enrolled</div><div class="stat-val">${total}</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-building"></i></div><div class="stat-label">Avg Class Size</div><div class="stat-val">${Math.round(total/classesDB.length)}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="input" placeholder="Search classes..." style="width:200px">
+        <select class="select" style="width:130px"><option>All Subjects</option>${['Mathematics','English','Science','History','P.E.','Art'].map(s=>`<option>${s}</option>`).join('')}</select>
+        <select class="select" style="width:120px"><option>All Grades</option>${['Grade 9','Grade 10','Grade 11','Grade 12','All Grades'].map(g=>`<option>${g}</option>`).join('')}</select>
+        <select class="select" style="width:120px"><option>All Status</option><option>Active</option><option>Inactive</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="adminClassModal()"><i class="ti ti-plus"></i> Create Class</button>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Class Name</th><th>Subject</th><th>Grade</th><th>Teacher</th><th>Enrolled</th><th>Room</th><th>Schedule</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      ${classesDB.map(c=>{
+        const subjectColors={'Mathematics':'#2563eb','English':'#7c3aed','Science':'#16a34a','History':'#d97706','P.E.':'#0891b2','Art':'#db2777'};
+        const sc=subjectColors[c.subject]||'#64748b';
+        const fill=Math.round(c.students/c.capacity*100);
+        return `<tr>
+          <td style="font-weight:700">${c.name}</td>
+          <td><span class="pill" style="background:${sc}20;color:${sc}">${c.subject}</span></td>
+          <td>${c.grade}</td>
+          <td style="color:var(--text2)">${c.teacher}</td>
+          <td>
+            <div style="font-size:12px;margin-bottom:3px">${c.students}/${c.capacity}</div>
+            <div class="bar-wrap" style="width:60px"><div class="bar" style="width:${fill}%;background:${fill>90?'#dc2626':fill>70?'#d97706':'#16a34a'}"></div></div>
+          </td>
+          <td style="color:var(--text2);font-size:12px">${c.room||'—'}</td>
+          <td style="color:var(--text2);font-size:12px;white-space:nowrap">${c.schedule||'—'}</td>
+          <td><span class="pill ${c.status==='active'?'pill-green':'pill-red'}">${c.status}</span></td>
+          <td><div style="display:flex;gap:4px">
+            <button class="btn btn-xs" onclick="viewClassStudents(classesDB.find(x=>x.id===${c.id}))" title="View Students"><i class="ti ti-users"></i></button>
+            <button class="btn btn-xs" onclick="adminClassModal(classesDB.find(x=>x.id===${c.id}))" title="Edit"><i class="ti ti-edit"></i></button>
+            <button class="btn btn-xs btn-danger" onclick="deleteClass(${c.id})" title="Delete"><i class="ti ti-trash"></i></button>
+          </div></td>
+        </tr>`;}).join('')}
+    </tbody></table></div>
+  </div>`;
+},
+
+'admin-analytics'() {
+  return `
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-trending-up"></i></div><div class="stat-label">Pass Rate</div><div class="stat-val">91%</div><div class="stat-sub" style="color:#16a34a">↑ 3% vs last year</div></div>
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-star"></i></div><div class="stat-label">Honor Roll</div><div class="stat-val">142</div><div class="stat-sub">GPA ≥ 3.5</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-alert-triangle"></i></div><div class="stat-label">At Risk</div><div class="stat-val">28</div><div class="stat-sub">Need intervention</div></div>
+    <div class="stat-card" style="border-top:3px solid #0891b2"><div class="stat-icon" style="color:#0891b2"><i class="ti ti-calendar-check"></i></div><div class="stat-label">Attendance Rate</div><div class="stat-val">91%</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">GPA Distribution</span></div>
+      ${[['4.0 (A)',82,16,'#16a34a'],['3.0–3.9 (B)',198,38,'#2563eb'],['2.0–2.9 (C)',161,31,'#d97706'],['1.0–1.9 (D)',55,11,'#dc2626'],['Below 1.0',28,5,'#991b1b']].map(([l,n,p,c])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600;min-width:110px">${l}</span><div class="bar-wrap" style="flex:1"><div class="bar" style="width:${p*3}%;background:${c}"></div></div><span style="font-size:13px;font-weight:700;color:${c};min-width:30px;text-align:right">${n}</span></div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">By Department</span></div>
+      ${[['Mathematics',84,'#2563eb'],['English',87,'#7c3aed'],['Science',81,'#16a34a'],['History',83,'#d97706'],['Arts',91,'#db2777'],['P.E.',96,'#0891b2']].map(([d,v,c])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600;min-width:110px">${d}</span><div class="bar-wrap" style="flex:1"><div class="bar" style="width:${v}%;background:${c}"></div></div><span style="font-size:13px;font-weight:700;color:${c}">${v}%</span></div>`).join('')}
+    </div>
+  </div>`;
+},
+};
+
+// ── Sub-renderers ────────────────────────────────────────────────
+function adminDash() {
+  return `
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-users"></i></div><div class="stat-label">Total Students</div><div class="stat-val">${studentsDB.length}</div><div class="stat-sub">Enrolled this year</div></div>
+    <div class="stat-card" style="border-top:3px solid #7c3aed"><div class="stat-icon" style="color:#7c3aed"><i class="ti ti-chalkboard"></i></div><div class="stat-label">Teachers</div><div class="stat-val">${teachersDB.length}</div><div class="stat-sub">6 departments</div></div>
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-calendar-check"></i></div><div class="stat-label">Attendance</div><div class="stat-val">91%</div><div class="stat-sub">School-wide today</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-book"></i></div><div class="stat-label">Classes</div><div class="stat-val">${classesDB.filter(c=>c.status==='active').length}</div><div class="stat-sub">Active this term</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Quick Actions</span></div>
+      ${[['ti-user-plus','Add Student','admin-students','#2563eb'],['ti-user-plus','Add Teacher','admin-teachers','#7c3aed'],['ti-book-plus','Create Class','admin-classes','#16a34a']].map(([icon,label,nav,c])=>`
+        <button class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px;border-color:${c}30" onclick="navigate('${nav}')">
+          <i class="ti ${icon}" style="color:${c};font-size:16px"></i>${label}
+        </button>`).join('')}
+      <button class="btn" style="width:100%;justify-content:flex-start" onclick="toast('Announcement sent to all!','success')"><i class="ti ti-bell" style="color:#d97706;font-size:16px"></i>Send Announcement</button>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Attendance by Grade</span></div>
+      ${[['Grade 9',94,'#2563eb'],['Grade 10',92,'#7c3aed'],['Grade 11',88,'#d97706'],['Grade 12',90,'#16a34a']].map(([g,v,c])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600;min-width:70px">${g}</span><div class="bar-wrap" style="flex:1"><div class="bar" style="width:${v}%;background:${c}"></div></div><span style="font-size:13px;font-weight:700;color:${c}">${v}%</span></div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">At-Risk Students</span></div>
+      ${studentsDB.filter(s=>s.gpa<2.0).map(s=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div class="big-ava" style="width:28px;height:28px;font-size:10px;background:#dc2626">${initials(s.name)}</div>
+        <div style="flex:1"><div style="font-size:12px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--text2)">GPA: ${s.gpa.toFixed(1)}</div></div>
+        <button class="btn btn-xs" onclick="navigate('messages')"><i class="ti ti-mail"></i></button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function teacherAttendance() {
+  return `
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <select class="select" style="width:140px"><option>Math 10A</option><option>Math 10B</option><option>Math 11</option></select>
+    <input type="date" class="input" style="width:160px" value="2026-06-07">
+    <button class="btn" style="margin-left:auto" onclick="studentsDB.forEach(s=>s.att='P');toast('All marked present','success')"><i class="ti ti-check"></i>All Present</button>
+    <button class="btn btn-primary" onclick="toast('Attendance saved!','success')"><i class="ti ti-device-floppy"></i>Save</button>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Math 10A — June 7, 2026</span>
+      <div style="display:flex;gap:6px"><span class="pill pill-green">Present: 6</span><span class="pill pill-red">Absent: 1</span><span class="pill pill-amber">Late: 1</span></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>Student</th><th>Status</th><th>Note</th></tr></thead><tbody>
+      ${studentsDB.slice(0,8).map((s,i)=>`<tr><td style="color:var(--text2)">${i+1}</td>
+        <td style="font-weight:600">${s.name}</td>
+        <td><select class="select" style="width:110px;padding:5px 8px;font-size:12px">
+          <option ${s.att==='P'?'selected':''}>✅ Present</option>
+          <option ${s.att==='A'?'selected':''}>❌ Absent</option>
+          <option ${s.att==='L'?'selected':''}>⏰ Late</option>
+          <option>📋 Excused</option>
+        </select></td>
+        <td><input class="input" placeholder="Optional note" style="font-size:12px;padding:5px 8px"></td>
+      </tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+}
+
+function teacherGrades() {
+  return `
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <select class="select" style="width:140px"><option>Math 10A</option><option>Math 10B</option><option>Math 11</option></select>
+    <select class="select" style="width:140px"><option>All Assessments</option><option>Quiz 1</option><option>Midterm</option></select>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="toast('Assessment added','success')"><i class="ti ti-plus"></i>Add Assessment</button>
+    <button class="btn" onclick="toast('Exporting...','info')"><i class="ti ti-download"></i>Export</button>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Grade Book — Math 10A</span><span class="pill pill-blue">Class Avg: 83.1</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Student</th><th>Quiz 1</th><th>Quiz 2</th><th>Midterm</th><th>Project</th><th>Average</th><th>Letter</th></tr></thead><tbody>
+      ${studentsDB.slice(0,6).map(s=>{
+        const scores=[Math.round(60+s.gpa*8),Math.round(62+s.gpa*8),Math.round(58+s.gpa*9),Math.round(61+s.gpa*8)];
+        const avg=(scores.reduce((a,b)=>a+b)/scores.length).toFixed(1);
+        const letter=avg>=90?'A':avg>=80?'B':avg>=70?'C':avg>=60?'D':'F';
+        const c=avg>=90?'#16a34a':avg>=80?'#2563eb':avg>=70?'#d97706':'#dc2626';
+        return `<tr><td style="font-weight:700">${s.name}</td>${scores.map(q=>`<td><input class="input" value="${q}" style="width:55px;text-align:center;padding:4px;font-size:12px"></td>`).join('')}<td style="font-weight:700;color:${c}">${avg}</td><td><span class="pill" style="background:${c}20;color:${c}">${letter}</span></td></tr>`;
+      }).join('')}
+    </tbody></table></div>
+  </div>`;
+}
+
+function teacherHomework() {
+  return `
+  <div style="display:flex;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <select class="select" style="width:140px"><option>Math 10A</option><option>Math 10B</option></select>
+    <button class="btn btn-primary" onclick="toast('Assignment form opened','info')"><i class="ti ti-plus"></i>New Assignment</button>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Create Assignment</span></div>
+    <div class="form-row"><div class="form-group"><div class="form-label">Title</div><input class="input" placeholder="Assignment title"></div><div class="form-group"><div class="form-label">Type</div><select class="select"><option>Homework</option><option>Quiz</option><option>Exam</option><option>Project</option></select></div></div>
+    <div class="form-row"><div class="form-group"><div class="form-label">Due Date</div><input type="date" class="input" value="2026-06-14"></div><div class="form-group"><div class="form-label">Max Points</div><input class="input" type="number" value="100"></div></div>
+    <div class="form-group"><div class="form-label">Instructions</div><textarea class="textarea" placeholder="Describe the assignment..."></textarea></div>
+    <button class="btn btn-primary" onclick="toast('Assignment published to students!','success')"><i class="ti ti-send"></i>Publish Assignment</button>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Active Assignments</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Title</th><th>Class</th><th>Due</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead><tbody>
+      ${[['Algebra Ch. 5','Math 10A','Jun 8','28/32','pill-amber','Grading'],['Polynomial Quiz','Math 10B','Jun 10','0/29','pill-red','Not started'],['Chapter 4 Review','Math 11','Jun 5','28/28','pill-green','Graded']].map(([t,c,d,sub,p,st])=>`<tr><td style="font-weight:700">${t}</td><td>${c}</td><td>${d}</td><td>${sub}</td><td><span class="pill ${p}">${st}</span></td><td><button class="btn btn-xs btn-primary">Grade</button></td></tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+}
+
+function parentPortal() {
+  return `
+  <div style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:12px;padding:22px;color:#fff;margin-bottom:20px;display:flex;align-items:center;gap:20px">
+    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff">AL</div>
+    <div style="flex:1"><div style="font-size:20px;font-weight:800">Alex Lee</div><div style="font-size:13px;color:rgba(255,255,255,.65)">Grade 10 · Westfield Academy · ID: WA-10042</div></div>
+    <div style="text-align:right"><div style="font-size:30px;font-weight:900;color:#60a5fa">3.7</div><div style="font-size:12px;color:rgba(255,255,255,.55)">Current GPA</div></div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #16a34a"><div class="stat-icon" style="color:#16a34a"><i class="ti ti-calendar-check"></i></div><div class="stat-label">Attendance</div><div class="stat-val">92%</div></div>
+    <div class="stat-card" style="border-top:3px solid #2563eb"><div class="stat-icon" style="color:#2563eb"><i class="ti ti-award"></i></div><div class="stat-label">Best Subject</div><div class="stat-val">P.E.</div></div>
+    <div class="stat-card" style="border-top:3px solid #d97706"><div class="stat-icon" style="color:#d97706"><i class="ti ti-books"></i></div><div class="stat-label">Homework Due</div><div class="stat-val">${hwState.filter(x=>!x).length}</div></div>
+    <div class="stat-card" style="border-top:3px solid #7c3aed"><div class="stat-icon" style="color:#7c3aed"><i class="ti ti-trophy"></i></div><div class="stat-label">Rank</div><div class="stat-val">#5</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Academic Summary</span></div>
+      ${subjects.map(s=>`<div class="grade-row"><span style="font-size:13px;font-weight:600;min-width:110px">${s.n}</span><div class="bar-wrap" style="flex:1"><div class="bar" style="width:${s.avg}%;background:${s.c}"></div></div><span style="font-weight:700;color:${s.c};margin-left:8px">${Math.round(s.avg)}</span><span class="pill" style="background:${s.c}20;color:${s.c};margin-left:4px">${s.letter}</span></div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Contact Teachers</span></div>
+      ${[['Ms. Rivera','Mathematics','#7c3aed'],['Mr. Jones','English','#2563eb'],['Dr. Lam','Science','#16a34a']].map(([n,s,c])=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div class="big-ava" style="width:32px;height:32px;font-size:11px;background:${c}">${initials(n)}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">${n}</div><div style="font-size:11px;color:var(--text2)">${s}</div></div>
+        <button class="btn btn-sm" onclick="navigate('messages')"><i class="ti ti-mail"></i></button>
+      </div>`).join('')}
+      <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="toast('Meeting request sent!','success')"><i class="ti ti-calendar"></i>Request Parent Meeting</button>
+    </div>
+  </div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+document.getElementById('datestr').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+setRole('student');
+</script>
+</body>
+</html>
