@@ -149,6 +149,61 @@ tr:hover td{background:#f8fafc}
 
 /* MSG */
 .msg-layout{display:grid;grid-template-columns:240px 1fr;height:460px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+
+/* ── HAMBURGER BUTTON ── */
+.hamburger{display:none;width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);flex-shrink:0}
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199}
+.sidebar-overlay.open{display:block}
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+@media(max-width:900px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .grid3{grid-template-columns:1fr 1fr}
+  .sch-grid{grid-template-columns:44px repeat(5,1fr);font-size:11px}
+  .sch-hdr,.sch-time{font-size:10px;padding:6px 3px}
+  .sch-cls{font-size:10px;padding:4px 5px}
+}
+@media(max-width:680px){
+  .hamburger{display:flex}
+  .sidebar{
+    position:fixed;left:-260px;top:0;bottom:0;z-index:200;
+    width:240px !important;transition:left .25s ease;
+    box-shadow:4px 0 24px rgba(0,0,0,.25);
+  }
+  .sidebar.open{left:0}
+  .stat-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .content{padding:14px}
+  .topbar{padding:0 14px;gap:8px}
+  .page-title{font-size:15px}
+  .card{padding:14px}
+  .modal{max-width:100%;margin:0}
+  .modal-overlay{padding:10px}
+  .search-bar .input{max-width:100%}
+  .msg-layout{grid-template-columns:1fr;height:auto}
+  .msg-list{height:200px;border-right:none;border-bottom:1px solid var(--border)}
+  .topbar-r .icon-btn:not(:last-child):not(:nth-last-child(2)){display:none}
+  .card-hdr{flex-direction:column;align-items:flex-start;gap:8px}
+  .btn-primary.card-hdr-btn{width:100%}
+  th,td{font-size:11px;padding:8px 8px}
+  .sch-grid{display:none}
+  .sch-mobile{display:block}
+}
+@media(max-width:400px){
+  .stat-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .stat-val{font-size:22px}
+  .role-btn{font-size:9px;padding:4px 3px}
+}
+
+/* Mobile schedule fallback */
+.sch-mobile{display:none}
+.sch-mobile-day{margin-bottom:12px}
+.sch-mobile-day-hdr{font-weight:700;font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;padding:6px 0;border-bottom:2px solid var(--border)}
+.sch-mobile-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:4px}
+
 .msg-list{border-right:1px solid var(--border);overflow-y:auto;background:var(--surface)}
 .msg-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:10px;transition:.15s}
 .msg-item:hover,.msg-item.active{background:#f0f4ff}
@@ -164,7 +219,8 @@ tr:hover td{background:#f8fafc}
 <div id="modal-root"></div>
 
 <div class="app">
-  <div class="sidebar">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
     <div class="logo">
       <i class="ti ti-school"></i>
       <div><div class="logo-text">EduTrack</div><div class="logo-sub">School Management</div></div>
@@ -184,6 +240,7 @@ tr:hover td{background:#f8fafc}
   </div>
   <div class="main">
     <div class="topbar">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
       <div class="page-title" id="ptitle">Dashboard</div>
       <div class="topbar-r">
         <span style="font-size:12px;color:var(--text2)" id="datestr"></span>
@@ -200,9 +257,15 @@ tr:hover td{background:#f8fafc}
 // ── State ─────────────────────────────────────────────────────────
 let role = 'student', page = 'dash';
 let modalStack = [];
-let hwState = [false,false,false,false,true,true];
-let activeMsgIdx = 0;
-let notifRead = {};
+
+// ── localStorage helpers ─────────────────────────────────────────
+function save(key, val) { try { localStorage.setItem('et_'+key, JSON.stringify(val)); } catch(e){} }
+function load(key, def) { try { const v=localStorage.getItem('et_'+key); return v!==null?JSON.parse(v):def; } catch(e){ return def; } }
+
+let hwState = load('hwState', [false,false,false,false,true,true]);
+let activeMsgIdx = load('activeMsgIdx', 0);
+let notifRead = load('notifRead', {});
+let studentsDB, teachersDB, classesDB, hwItems;
 
 // ── Data ──────────────────────────────────────────────────────────
 const subjects = [
@@ -213,7 +276,7 @@ const subjects = [
   {n:'P.E.',c:'#0891b2',avg:96.2,letter:'A',teacher:'Coach Mills'}
 ];
 
-let studentsDB = [
+const defaultStudents = [
   {id:1,name:'Alex Lee',email:'alex.lee@student.edu',grade:'Grade 10',gpa:3.7,att:'P',status:'active',phone:'555-0101',joined:'2023-09-01'},
   {id:2,name:'Maria Gonzalez',email:'maria.g@student.edu',grade:'Grade 10',gpa:4.0,att:'P',status:'active',phone:'555-0102',joined:'2023-09-01'},
   {id:3,name:'James Park',email:'james.p@student.edu',grade:'Grade 10',gpa:1.7,att:'A',status:'active',phone:'555-0103',joined:'2023-09-01'},
@@ -224,7 +287,7 @@ let studentsDB = [
   {id:8,name:'Olivia Kim',email:'olivia.k@student.edu',grade:'Grade 9',gpa:3.3,att:'P',status:'active',phone:'555-0108',joined:'2024-09-01'},
 ];
 
-let teachersDB = [
+const defaultTeachers = [
   {id:101,name:'Ms. Rivera',email:'rivera@edu.com',subject:'Mathematics',classes:['Math 10A','Math 10B','Math 11'],status:'active',phone:'555-0201',joined:'2019-08-15'},
   {id:102,name:'Mr. Jones',email:'jones@edu.com',subject:'English',classes:['English 10','AP Literature'],status:'active',phone:'555-0202',joined:'2020-08-15'},
   {id:103,name:'Dr. Lam',email:'lam@edu.com',subject:'Science',classes:['Physics H','Biology 10'],status:'active',phone:'555-0203',joined:'2018-08-15'},
@@ -233,7 +296,7 @@ let teachersDB = [
   {id:106,name:'Ms. Osei',email:'osei@edu.com',subject:'Art',classes:['Art Studio','Advanced Art'],status:'active',phone:'555-0206',joined:'2022-08-15'},
 ];
 
-let classesDB = [
+const defaultClasses = [
   {id:201,name:'Math 10A',subject:'Mathematics',grade:'Grade 10',teacher:'Ms. Rivera',teacherId:101,room:'204',schedule:'MWF 8:00-9:00',students:32,capacity:35,status:'active'},
   {id:202,name:'Math 10B',subject:'Mathematics',grade:'Grade 10',teacher:'Ms. Rivera',teacherId:101,room:'204',schedule:'MWF 10:00-11:00',students:29,capacity:35,status:'active'},
   {id:203,name:'English 10',subject:'English',grade:'Grade 10',teacher:'Mr. Jones',teacherId:102,room:'101',schedule:'TTh 9:00-10:30',students:30,capacity:30,status:'active'},
@@ -244,7 +307,7 @@ let classesDB = [
   {id:208,name:'Art Studio',subject:'Art',grade:'All Grades',teacher:'Ms. Osei',teacherId:106,room:'Art Studio',schedule:'F 1:00-3:00',students:20,capacity:20,status:'active'},
 ];
 
-let hwItems = [
+const defaultHwItems = [
   {id:1,t:'Algebra Chapter 5 Problems',s:'Mathematics',due:'Jun 8',urgent:true,details:'Solve problems 1–30'},
   {id:2,t:'Essay Draft: Modern Literature',s:'English',due:'Jun 10',urgent:false,details:'800–1000 words, MLA format'},
   {id:3,t:'Lab Report: Photosynthesis',s:'Science',due:'Jun 12',urgent:false,details:'Include data table and conclusion'},
@@ -252,6 +315,12 @@ let hwItems = [
   {id:5,t:'Poetry Analysis: Frost',s:'English',due:'Jun 5',urgent:false,details:'Completed'},
   {id:6,t:'Chapter 4 Review',s:'Mathematics',due:'Jun 3',urgent:false,details:'Completed'},
 ];
+
+// Load from localStorage or use defaults
+studentsDB = load('studentsDB', defaultStudents);
+teachersDB = load('teachersDB', defaultTeachers);
+classesDB  = load('classesDB',  defaultClasses);
+hwItems    = load('hwItems',    defaultHwItems);
 
 const messages = [
   {from:'Ms. Rivera',ava:'MR',color:'#7c3aed',preview:'Your midterm score has been updated',time:'10:32 AM',unread:true,thread:[{me:false,text:'Hi Alex, your midterm score has been updated to 88. Great improvement!'},{me:true,text:'Thank you Ms. Rivera! I worked really hard on it.'},{me:false,text:'It shows! Keep it up. Let me know if you need help with Chapter 5.'}]},
@@ -306,11 +375,24 @@ function setRole(r) {
   document.getElementById('urole').textContent = u.role;
   document.getElementById('ava').textContent = u.ava;
   document.getElementById('ava').style.background = u.color;
+  closeSidebar();
   navigate('dash');
+}
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('sidebar-overlay');
+  s.classList.toggle('open');
+  o.classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
 }
 
 function navigate(p) {
   page = p;
+  closeSidebar();
   renderNav();
   const titles = {dash:'Dashboard','admin-students':'Manage Students','admin-teachers':'Manage Teachers','admin-classes':'Manage Classes','admin-analytics':'Analytics',attendance:role==='teacher'?'Attendance':'My Attendance',grades:role==='teacher'?'Grade Book':'My Grades',homework:role==='teacher'?'Assignments':'Homework',schedule:'Weekly Schedule',messages:'Messages',notifications:'Notifications',reports:'Reports',settings:'Settings'};
   document.getElementById('ptitle').textContent = titles[p] || p;
@@ -334,7 +416,7 @@ function statusPill(s) { return s==='active'?'pill-green':'pill-red'; }
 
 function bindAll() {
   document.querySelectorAll('.hw-check').forEach((el,i) => {
-    el.onclick = () => { hwState[i]=!hwState[i]; el.classList.toggle('done',hwState[i]); el.innerHTML=hwState[i]?'<i class="ti ti-check"></i>':''; };
+    el.onclick = () => { hwState[i]=!hwState[i]; save('hwState',hwState); el.classList.toggle('done',hwState[i]); el.innerHTML=hwState[i]?'<i class="ti ti-check"></i>':''; };
   });
 }
 
@@ -394,18 +476,21 @@ function saveStudent(id) {
     studentsDB.push({id:Date.now(),name,email,grade,phone,status,gpa:0,att:'P',joined:new Date().toISOString().split('T')[0]});
     toast('Student added successfully','success');
   }
+  save('studentsDB', studentsDB);
   closeModal(); navigate('admin-students');
 }
 
 function deleteStudent(id) {
   if (!confirm('Are you sure you want to remove this student? This cannot be undone.')) return;
   studentsDB = studentsDB.filter(s=>s.id!==id);
+  save('studentsDB', studentsDB);
   toast('Student removed','success'); navigate('admin-students');
 }
 
 function toggleStudentStatus(id) {
   const s = studentsDB.find(s=>s.id===id);
   s.status = s.status==='active'?'inactive':'active';
+  save('studentsDB', studentsDB);
   toast(`Student ${s.status==='active'?'activated':'deactivated'}`,'success'); navigate('admin-students');
 }
 
@@ -464,12 +549,14 @@ function saveTeacher(id) {
     teachersDB.push({id:Date.now(),name,email,subject,phone,status,classes:[],joined:new Date().toISOString().split('T')[0]});
     toast('Teacher added successfully','success');
   }
+  save('teachersDB', teachersDB);
   closeModal(); navigate('admin-teachers');
 }
 
 function deleteTeacher(id) {
   if (!confirm('Remove this teacher? Their classes will become unassigned.')) return;
   teachersDB = teachersDB.filter(t=>t.id!==id);
+  save('teachersDB', teachersDB);
   toast('Teacher removed','success'); navigate('admin-teachers');
 }
 
@@ -543,12 +630,14 @@ function saveClass(id) {
     classesDB.push({id:Date.now(),name,subject,grade,teacherId,teacher,room,capacity,schedule,status,students:0});
     toast('Class created successfully','success');
   }
+  save('classesDB', classesDB);
   closeModal(); navigate('admin-classes');
 }
 
 function deleteClass(id) {
   if (!confirm('Delete this class? All enrollment data will be removed.')) return;
   classesDB = classesDB.filter(c=>c.id!==id);
+  save('classesDB', classesDB);
   toast('Class deleted','success'); navigate('admin-classes');
 }
 
@@ -696,6 +785,15 @@ schedule() {
       if(c.free) return `<div class="sch-cell"><div class="sch-cls" style="background:#f8fafc;color:#94a3b8;font-size:11px">Free</div></div>`;
       return `<div class="sch-cell"><div class="sch-cls" style="background:${c.c}15;border-left:3px solid ${c.c}"><div style="font-size:11px;font-weight:700;color:${c.c}">${c.s}</div></div></div>`;
     }).join('')}`).join('')}
+  </div>
+  <div class="sch-mobile">
+    ${days.map((d,di)=>`<div class="sch-mobile-day">
+      <div class="sch-mobile-day-hdr">${d}</div>
+      ${grid.map((row,pi)=>row[di]?`<div class="sch-mobile-item" style="background:${row[di].lunch?'#f1f5f9':row[di].free?'#f8fafc':row[di].c+'15'}">
+        <span style="font-size:11px;color:var(--text3);min-width:40px">${times[pi]}</span>
+        <span style="font-size:13px;font-weight:600;color:${row[di].lunch?'#64748b':row[di].free?'#94a3b8':row[di].c}">${row[di].lunch?'🍽 Lunch':row[di].free?'Free Period':row[di].s}</span>
+      </div>`:'').join('')}
+    </div>`).join('')}
   </div>`;
 },
 
@@ -734,7 +832,7 @@ messages() {
 
 notifications() {
   return `
-  <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-sm" onclick="notifRead={};navigate('notifications')">Mark all read</button></div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-sm" onclick="notifRead={};save('notifRead',notifRead);navigate('notifications')">Mark all read</button></div>
   <div class="card">
     ${notifs.map((n,i)=>`<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);background:${!notifRead[i]?'#fafbff':'transparent'}" onclick="notifRead[${i}]=true;navigate('notifications')">
       <div style="width:38px;height:38px;border-radius:10px;background:${n.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
